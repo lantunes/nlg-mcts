@@ -49,6 +49,14 @@ class ShakespeareCharLanguageModel:
         train = (everygrams(tokenized, max_len=self._n))
         return self._lm.perplexity(train)
 
+    def entropy(self, text):
+        tokenized = self.tokenize(text)
+        train = (everygrams(tokenized, max_len=self._n))
+        return self._lm.entropy(train)
+
+    def vocab(self):
+        return [w for w in self._lm.vocab]
+
     def score(self, char, context=None):
         tokenized = self.tokenize(context)
         return self._lm.score(char, tokenized)

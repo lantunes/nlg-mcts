@@ -54,6 +54,37 @@ class TestLanguageModel(unittest.TestCase):
         line = "<L>To be, or not to be, that is the question:</L>"
         self.assertAlmostEqual(9.985, lm.perplexity(line), places=3)
 
+    def test_shakespeare_entropy(self):
+        lm = ShakespeareCharLanguageModel(n=3)
+
+        line = "A dog and a cat"
+        self.assertAlmostEqual(3.733, lm.entropy(line), places=3)
+
+        line = "A dog and a ggg"
+        self.assertAlmostEqual(4.351, lm.entropy(line), places=3)
+
+        line = "A dog and a tac"
+        self.assertAlmostEqual(3.962, lm.entropy(line), places=3)
+
+        line = "Adfsd ew xczv sq"
+        self.assertAlmostEqual(6.941, lm.entropy(line), places=3)
+
+        line = "To be or not to be"
+        self.assertAlmostEqual(3.186, lm.entropy(line), places=3)
+
+        line = "<L>To be, or not to be</L>"
+        self.assertAlmostEqual(3.431, lm.entropy(line), places=3)
+
+        line = "<L>To be, or not to be, that is the question:</L>"
+        self.assertAlmostEqual(3.320, lm.entropy(line), places=3)
+
+    def test_vocab(self):
+        lm = ShakespeareCharLanguageModel(n=3)
+        self.assertEqual(['<L>', 'N', 'a', 'y', ',', ' ', 'b', 'u', 't', 'h', 'i', 's', 'd', 'o', 'g', 'e', 'f',
+                          'r', 'n', 'l', "'", '</L>', 'O', 'w', 'm', ':', 'T', 'H', 'v', 'k', 'p', 'M', 'c', 'U',
+                          'W', 'A', '.', 'L', 'I', 'R', 'G', 'F', ';', '-', 'C', 'D', 'P', '!', 'Y', '?', 'E',
+                          'q', 'K', 'x', 'B', 'z', 'S', 'V', 'J', 'j', 'Q', '&', 'Z', '<UNK>'], lm.vocab())
+
     def test_score(self):
         lm = ShakespeareCharLanguageModel(n=3)
 
