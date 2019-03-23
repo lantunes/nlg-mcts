@@ -49,7 +49,7 @@ class LanguageModelMCTS:
         return most_visited_node.state
 
     def _select_next_move_randomly(self, rollout_state, language_model, width):
-        top_n_tokens = language_model.top_n_vocab_with_weights(width, ''.join(rollout_state[-self._lm.order():]))
+        top_n_tokens = language_model.top_n_vocab_with_weights(width, ''.join(rollout_state[-self._lm.order() + 1:]))
         return np.random.choice(top_n_tokens[0], p=top_n_tokens[1])
 
     def _store_best(self, rollout_state, score):
@@ -75,7 +75,7 @@ class _Node:
         self.untried_moves = self._get_child_states()
 
     def _get_child_states(self):
-        top_n_tokens = self._lm.top_n_vocab(self._width, ''.join(self.state[-self._lm.order():]))
+        top_n_tokens = self._lm.top_n_vocab(self._width, ''.join(self.state[-self._lm.order() + 1:]))
         child_states = []
         for letter in top_n_tokens:
             child_states.append(self.state + [letter])

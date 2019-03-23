@@ -72,7 +72,10 @@ class ShakespeareCharLanguageModel:
         top_n = []
         vocab_scores = self.vocab_scores(context)
         for i in range(n):
-            top_n.append(next(vocab_scores)[0])
+            v = next(vocab_scores)
+            if v[0] == "<UNK>":
+                v = next(vocab_scores)
+            top_n.append(v[0])
         return top_n
 
     def top_n_vocab_with_weights(self, n, context=None):
@@ -80,6 +83,8 @@ class ShakespeareCharLanguageModel:
         vocab_scores = self.vocab_scores(context)
         for i in range(n):
             v = next(vocab_scores)
+            if v[0] == "<UNK>":
+                v = next(vocab_scores)
             top_n[0].append(v[0])
             top_n[1].append(v[1])
         return top_n[0], self._normalize(top_n[1])
