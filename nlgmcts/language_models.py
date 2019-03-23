@@ -67,3 +67,26 @@ class ShakespeareCharLanguageModel:
         for v in self._lm.vocab:
             all.append((v, self._lm.score(v, tokenized)))
         return reversed(sorted(all, key=lambda k: k[1]))
+
+    def top_n_vocab(self, n, context=None):
+        top_n = []
+        vocab_scores = self.vocab_scores(context)
+        for i in range(n):
+            top_n.append(next(vocab_scores)[0])
+        return top_n
+
+    def top_n_vocab_with_weights(self, n, context=None):
+        top_n = ([], [])
+        vocab_scores = self.vocab_scores(context)
+        for i in range(n):
+            v = next(vocab_scores)
+            top_n[0].append(v[0])
+            top_n[1].append(v[1])
+        return top_n[0], self._normalize(top_n[1])
+
+    def _normalize(self, probs):
+        prob_factor = 1 / sum(probs)
+        return [prob_factor * p for p in probs]
+
+    def order(self):
+        return self._n

@@ -354,3 +354,23 @@ class TestLanguageModel(unittest.TestCase):
         v = next(scores)
         self.assertEqual("<L>", v[0])
         self.assertAlmostEqual(0.0016, v[1], places=4)
+
+    def test_top_n_vocab(self):
+        lm = ShakespeareCharLanguageModel(n=3)
+
+        top_n = lm.top_n_vocab(3, "ab")
+        self.assertEqual(["l", "o", "s"], top_n)
+
+    def test_top_n_vocab_with_weights(self):
+        lm = ShakespeareCharLanguageModel(n=3)
+
+        top_n = lm.top_n_vocab_with_weights(3, "ab")
+        self.assertEqual(["l", "o", "s"], top_n[0])
+        self.assertEqual(3, len(top_n[1]))
+        self.assertAlmostEqual(0.4820, top_n[1][0], places=4)
+        self.assertAlmostEqual(0.4149, top_n[1][1], places=4)
+        self.assertAlmostEqual(0.1031, top_n[1][2], places=4)
+
+    def test_order(self):
+        lm = ShakespeareCharLanguageModel(n=2)
+        self.assertEqual(2, lm.order())
