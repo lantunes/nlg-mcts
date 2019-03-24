@@ -10,7 +10,7 @@ if __name__ == '__main__':
     text_length = 50
     start_state = []
 
-    eval_function = lambda text : -lm.perplexity(text)
+    eval_function = lambda text: -lm.perplexity(''.join(text))
 
     mcts = LanguageModelMCTS(lm, width, text_length, eval_function)
     state = start_state

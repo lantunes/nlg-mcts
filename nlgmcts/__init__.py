@@ -1,3 +1,3 @@
-from .word_mcts import *
+from .text_mcts import *
 from .language_models import *
 from .lm_mcts import *

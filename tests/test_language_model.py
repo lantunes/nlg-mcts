@@ -85,6 +85,11 @@ class TestLanguageModel(unittest.TestCase):
                           'W', 'A', '.', 'L', 'I', 'R', 'G', 'F', ';', '-', 'C', 'D', 'P', '!', 'Y', '?', 'E',
                           'q', 'K', 'x', 'B', 'z', 'S', 'V', 'J', 'j', 'Q', '&', 'Z', '<UNK>'], lm.vocab())
 
+        self.assertEqual(['<L>', 'N', 'a', 'y', ',', ' ', 'b', 'u', 't', 'h', 'i', 's', 'd', 'o', 'g', 'e', 'f',
+                          'r', 'n', 'l', "'", '</L>', 'O', 'w', 'm', ':', 'T', 'H', 'v', 'k', 'p', 'M', 'c', 'U',
+                          'W', 'A', '.', 'L', 'I', 'R', 'G', 'F', ';', '-', 'C', 'D', 'P', '!', 'Y', '?', 'E',
+                          'q', 'K', 'x', 'B', 'z', 'S', 'V', 'J', 'j', 'Q', '&', 'Z'], lm.vocab(with_unk=False))
+
     def test_score(self):
         lm = ShakespeareCharLanguageModel(n=3)
 

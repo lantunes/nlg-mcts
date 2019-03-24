@@ -18,9 +18,9 @@ if __name__ == '__main__':
         all_words.extend(shakespeare.words(book))
     words = set([w.lower() for w in all_words])
 
-    eval_function = lambda word : 1 if word in words else 0
+    eval_function = lambda word: 1 if ''.join(word) in words else 0
 
-    mcts = WordMCTS(alphabet, word_length, eval_function)
+    mcts = TextMCTS(alphabet, word_length, eval_function)
     state = start_state
 
     while len(state) < word_length:

@@ -4,15 +4,16 @@ import math
 import numpy as np
 
 
-class WordMCTS:
-    def __init__(self, alphabet, word_length, eval_function, c=sqrt(2)):
-        self._alphabet = alphabet
-        self._word_length = word_length
+class TextMCTS:
+    def __init__(self, vocabulary, text_length, eval_function, c=sqrt(2)):
+        self._vocabulary = vocabulary
+        self._text_length = text_length
         self._eval_function = eval_function
+        self._best_sequence = None
         self._c = c
 
     def search(self, state, num_simulations):
-        root_node = _Node(state, self._alphabet, self._word_length, self._c)
+        root_node = _Node(state, self._vocabulary, self._text_length, self._c)
 
         # Perform simulations
         for i in range(num_simulations):
@@ -25,35 +26,45 @@ class WordMCTS:
             # Expand
             if node.has_untried_moves():
                 move_state = node.select_untried_move()
-                node = node.add_child(move_state, self._alphabet, self._word_length, self._c)
+                node = node.add_child(move_state, self._vocabulary, self._text_length, self._c)
 
             # Rollout
             rollout_state = list(node.state)
-            while len(rollout_state) < self._word_length:
+            while len(rollout_state) < self._text_length:
                 rollout_state += [self._select_next_move_randomly()]
 
             # Backpropagate
             #   backpropagate from the expanded node and work back to the root node
-            score = self._eval_function(''.join(rollout_state))
+            score = self._eval_function(rollout_state)
             while node is not None:
                 node.visits += 1
                 node.wins += score
                 node = node.parent
+
+            self._store_best(rollout_state, score)
 
         # return the move that was most visited
         most_visited_node = sorted(root_node.children, key = lambda c: c.visits)[-1]
         return most_visited_node.state
 
     def _select_next_move_randomly(self):
-        return np.random.choice(self._alphabet)
+        return np.random.choice(self._vocabulary)
+
+    def _store_best(self, rollout_state, score):
+        current_best = self._best_sequence
+        if current_best is None or score > current_best[1]:
+            self._best_sequence = (rollout_state, score)
+
+    def get_best_sequence(self):
+        return self._best_sequence
 
 
 class _Node:
-    def __init__(self, state, alphabet, word_length, c, parent=None):
+    def __init__(self, state, vocabulary, text_length, c, parent=None):
         self.state = state
         self._c = c
-        self._alphabet = alphabet
-        self._word_length = word_length
+        self._vocabulary = vocabulary
+        self._text_length = text_length
         self.wins = 0.0
         self.visits = 0.0
         self.parent = parent
@@ -62,8 +73,8 @@ class _Node:
 
     def _get_child_states(self):
         child_states = []
-        for letter in self._alphabet:
-            child_states.append(self.state + [letter])
+        for token in self._vocabulary:
+            child_states.append(self.state + [token])
         return child_states
 
     def _average_value(self):
@@ -75,8 +86,8 @@ class _Node:
     def select_untried_move(self):
         return random.choice(self.untried_moves)
 
-    def add_child(self, child_state, alphabet, word_length, c):
-        child = _Node(child_state, alphabet, word_length, c, parent=self)
+    def add_child(self, child_state, vocabulary, text_length, c):
+        child = _Node(child_state, vocabulary, text_length, c, parent=self)
         self.children.append(child)
         self.untried_moves.remove(child_state)
         return child

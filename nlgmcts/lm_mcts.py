@@ -36,7 +36,7 @@ class LanguageModelMCTS:
 
             # Backpropagate
             #   backpropagate from the expanded node and work back to the root node
-            score = self._eval_function(''.join(rollout_state))
+            score = self._eval_function(rollout_state)
             while node is not None:
                 node.visits += 1
                 node.wins += score

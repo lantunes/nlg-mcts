@@ -54,7 +54,9 @@ class ShakespeareCharLanguageModel:
         train = (everygrams(tokenized, max_len=self._n))
         return self._lm.entropy(train)
 
-    def vocab(self):
+    def vocab(self, with_unk=True):
+        if not with_unk:
+            return [w for w in self._lm.vocab if w != "<UNK>"]
         return [w for w in self._lm.vocab]
 
     def score(self, char, context=None):
