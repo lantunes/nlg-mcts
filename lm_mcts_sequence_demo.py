@@ -10,9 +10,9 @@ if __name__ == '__main__':
     text_length = 50
     start_state = ["<L>"]
 
-    eval_function = lambda text: -lm.perplexity(text)
+    eval_function = lambda text: 100 - lm.perplexity(text)
 
-    mcts = LanguageModelMCTS(lm, width, text_length, eval_function)
+    mcts = LanguageModelMCTS(lm, width, text_length, eval_function, c=25)
     state = start_state
 
     print("beginning search...")
@@ -21,4 +21,4 @@ if __name__ == '__main__':
     best = mcts.get_best_sequence()
 
     generated_text = ''.join(best[0])
-    print("generated text: %s (score: %s)" % (generated_text, str(best[1])))
+    print("generated text: %s (score: %s, perplexity: %s)" % (generated_text, str(best[1]), lm.perplexity(generated_text)))
