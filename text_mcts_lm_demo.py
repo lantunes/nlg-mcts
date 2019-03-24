@@ -9,7 +9,7 @@ if __name__ == '__main__':
     text_length = 50
     start_state = ["<L>"]
 
-    eval_function = lambda text_state: -lm.perplexity(''.join(text_state))
+    eval_function = lambda text: -lm.perplexity(text)
 
     mcts = TextMCTS(lm.vocab(with_unk=False), text_length, eval_function, c=10)
     state = start_state

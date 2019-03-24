@@ -39,18 +39,27 @@ class ShakespeareCharLanguageModel:
                     tokens.extend(list(s))
         return tokens
 
+    def _tokenize_context(self, context=None):
+        if context is None or type(context) == str:
+            tokenized = self.tokenize(context)
+        elif type(context) == list:
+            tokenized = context
+        else:
+            raise Exception("unsupported context type: ", type(context))
+        return tokenized
+
     def generate(self, num_chars=1, text_seed=None, random_seed=None):
-        tokenized = self.tokenize(text_seed)
+        tokenized = self._tokenize_context(text_seed)
         generated = self._lm.generate(num_words=num_chars, text_seed=tokenized, random_seed=random_seed)
         return ''.join(generated)
 
     def perplexity(self, text):
-        tokenized = self.tokenize(text)
+        tokenized = self._tokenize_context(text)
         train = (everygrams(tokenized, max_len=self._n))
         return self._lm.perplexity(train)
 
     def entropy(self, text):
-        tokenized = self.tokenize(text)
+        tokenized = self._tokenize_context(text)
         train = (everygrams(tokenized, max_len=self._n))
         return self._lm.entropy(train)
 
@@ -60,12 +69,12 @@ class ShakespeareCharLanguageModel:
         return [w for w in self._lm.vocab]
 
     def score(self, char, context=None):
-        tokenized = self.tokenize(context)
+        tokenized = self._tokenize_context(context)
         return self._lm.score(char, tokenized)
 
     def vocab_scores(self, context=None):
         all = []
-        tokenized = self.tokenize(context)
+        tokenized = self._tokenize_context(context)
         for v in self._lm.vocab:
             all.append((v, self._lm.score(v, tokenized)))
         return reversed(sorted(all, key=lambda k: k[1]))

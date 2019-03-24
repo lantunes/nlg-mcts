@@ -30,6 +30,9 @@ class TestLanguageModel(unittest.TestCase):
         generated = lm.generate(num_chars=5, text_seed="ab", random_seed=1)
         self.assertEqual("hold ", generated)
 
+        generated = lm.generate(num_chars=5, text_seed=["a", "b"], random_seed=1)
+        self.assertEqual("hold ", generated)
+
     def test_shakespeare_perplexity(self):
         lm = ShakespeareCharLanguageModel(n=3)
 
@@ -53,6 +56,9 @@ class TestLanguageModel(unittest.TestCase):
 
         line = "<L>To be, or not to be, that is the question:</L>"
         self.assertAlmostEqual(9.985, lm.perplexity(line), places=3)
+
+        line = ['A', ' ', 'd', 'o', 'g', ' ', 'a', 'n', 'd', ' ', 'a', ' ', 'c', 'a', 't']
+        self.assertAlmostEqual(13.296, lm.perplexity(line), places=3)
 
     def test_shakespeare_entropy(self):
         lm = ShakespeareCharLanguageModel(n=3)
@@ -78,6 +84,9 @@ class TestLanguageModel(unittest.TestCase):
         line = "<L>To be, or not to be, that is the question:</L>"
         self.assertAlmostEqual(3.320, lm.entropy(line), places=3)
 
+        line = ['A', ' ', 'd', 'o', 'g', ' ', 'a', 'n', 'd', ' ', 'a', ' ', 'c', 'a', 't']
+        self.assertAlmostEqual(3.733, lm.entropy(line), places=3)
+
     def test_vocab(self):
         lm = ShakespeareCharLanguageModel(n=3)
         self.assertEqual(['<L>', 'N', 'a', 'y', ',', ' ', 'b', 'u', 't', 'h', 'i', 's', 'd', 'o', 'g', 'e', 'f',
@@ -97,6 +106,12 @@ class TestLanguageModel(unittest.TestCase):
         self.assertAlmostEqual(0.90, score, places=2)
 
         score = lm.score("l", context="ab")
+        self.assertAlmostEqual(0.30, score, places=2)
+
+        score = lm.score("u", context=["q"])
+        self.assertAlmostEqual(0.90, score, places=2)
+
+        score = lm.score("l", context=["a", "b"])
         self.assertAlmostEqual(0.30, score, places=2)
 
     def test_vocab_scores(self):
@@ -360,6 +375,12 @@ class TestLanguageModel(unittest.TestCase):
         self.assertEqual("<L>", v[0])
         self.assertAlmostEqual(0.0016, v[1], places=4)
 
+        scores = lm.vocab_scores(["a", "b"])
+
+        v = next(scores)
+        self.assertEqual("l", v[0])
+        self.assertAlmostEqual(0.3016, v[1], places=4)
+
     def test_top_n_vocab(self):
         lm = ShakespeareCharLanguageModel(n=3)
 
@@ -367,6 +388,12 @@ class TestLanguageModel(unittest.TestCase):
         self.assertEqual(["l", "o", "s"], top_n)
 
         top_n = lm.top_n_vocab(3, "e a g")
+        self.assertEqual(['Z', '&', 'Q'], top_n)
+
+        top_n = lm.top_n_vocab(3, ["a", "b"])
+        self.assertEqual(["l", "o", "s"], top_n)
+
+        top_n = lm.top_n_vocab(3, ["e", " ", "a", " ", "g"])
         self.assertEqual(['Z', '&', 'Q'], top_n)
 
     def test_top_n_vocab_with_weights(self):
@@ -385,6 +412,13 @@ class TestLanguageModel(unittest.TestCase):
         self.assertAlmostEqual(0.3333, top_n[1][0], places=4)
         self.assertAlmostEqual(0.3333, top_n[1][1], places=4)
         self.assertAlmostEqual(0.3333, top_n[1][2], places=4)
+
+        top_n = lm.top_n_vocab_with_weights(3, ["a", "b"])
+        self.assertEqual(["l", "o", "s"], top_n[0])
+        self.assertEqual(3, len(top_n[1]))
+        self.assertAlmostEqual(0.4820, top_n[1][0], places=4)
+        self.assertAlmostEqual(0.4149, top_n[1][1], places=4)
+        self.assertAlmostEqual(0.1031, top_n[1][2], places=4)
 
     def test_order(self):
         lm = ShakespeareCharLanguageModel(n=2)
