@@ -4,17 +4,17 @@ import math
 import numpy as np
 
 
-class LanguageModelMCTS:
-    def __init__(self, language_model, width, text_length, eval_function, c=sqrt(2)):
+class LanguageModelMCTSWithPUCT:
+    def __init__(self, language_model, width, text_length, eval_function, cpuct):
         self._lm = language_model
         self._width = width
         self._text_length = text_length
         self._eval_function = eval_function
         self._best_sequence = None
-        self._c = c
+        self._cpuct = cpuct
 
     def search(self, state, num_simulations):
-        root_node = _Node(state, self._lm, self._width, self._text_length, self._c)
+        root_node = _Node(state, self._lm, self._width, self._text_length, self._cpuct)
 
         # Perform simulations
         for i in range(num_simulations):
@@ -27,7 +27,7 @@ class LanguageModelMCTS:
             # Expand
             if node.has_untried_moves():
                 move_state = node.select_untried_move()
-                node = node.add_child(move_state, self._lm, self._width, self._text_length, self._c)
+                node = node.add_child(move_state, self._lm, self._width, self._text_length, self._cpuct)
 
             # Rollout
             rollout_state = list(node.state)
@@ -62,25 +62,29 @@ class LanguageModelMCTS:
 
 
 class _Node:
-    def __init__(self, state, language_model, width, text_length, c, parent=None):
+    def __init__(self, state, language_model, width, text_length, cpuct, parent=None):
         self.state = state
-        self._c = c
+        self._cpuct = cpuct
         self._lm = language_model
         self._width = width
         self._text_length = text_length
         self.wins = 0.0
         self.visits = 0.0
+        self.prob = None
         self.parent = parent
         self.children = []
-        self.untried_moves = self._get_child_states()
+        self.untried_moves, self.child_weight_map = self._get_child_states()
 
     def _get_child_states(self):
         child_states = []
+        child_state_weight_map = {}
         if len(self.state) < self._text_length:
-            top_n_tokens = self._lm.top_n_vocab(self._width, self.state[-self._lm.order() + 1:])
-            for letter in top_n_tokens:
-                child_states.append(self.state + [letter])
-        return child_states
+            top_n_tokens_with_weights = self._lm.top_n_vocab_with_weights(self._width, self.state[-self._lm.order() + 1:])
+            for i in range(len(top_n_tokens_with_weights[0])):
+                child_state = self.state + [top_n_tokens_with_weights[0][i]]
+                child_states.append(child_state)
+                child_state_weight_map[''.join(child_state)] = top_n_tokens_with_weights[1][i]
+        return child_states, child_state_weight_map
 
     def _average_value(self):
         return self.wins / self.visits
@@ -93,6 +97,7 @@ class _Node:
 
     def add_child(self, child_state, language_model, width, text_length, c):
         child = _Node(child_state, language_model, width, text_length, c, parent=self)
+        child.prob = self.child_weight_map[''.join(child_state)]
         self.children.append(child)
         self.untried_moves.remove(child_state)
         return child
@@ -101,16 +106,18 @@ class _Node:
         return self.children != []
 
     def select_child(self):
-        highest_ucb1 = None
+        highest_puct = None
         selected_child_node = None
         for child_node in self.children:
-            ucb1 = child_node.ucb1()
-            if highest_ucb1 is None or highest_ucb1 < ucb1:
-                highest_ucb1 = ucb1
+            puct = child_node.puct()
+            if highest_puct is None or highest_puct < puct:
+                highest_puct = puct
                 selected_child_node = child_node
         return selected_child_node
 
-    def ucb1(self):
-        if self.visits == 0.0:
+    def puct(self):
+        if self.visits == 0:
             return math.inf
-        return self._average_value() + self._c*sqrt(log(self.parent.visits)/self.visits)
+        if self.prob is None:
+            raise Exception("node has no action prob: %s" % self.state)
+        return self.wins / self.visits + self._cpuct * self.prob * (sqrt(self.parent.visits) / (1 + self.visits))

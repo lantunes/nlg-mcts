@@ -6,13 +6,14 @@ if __name__ == '__main__':
     lm = ShakespeareCharLanguageModel(n=5)
 
     num_simulations = 1000
-    width = 3
+    width = 6
     text_length = 50
     start_state = ["<L>"]
 
     eval_function = lambda text: 100 - lm.perplexity(text)
 
-    mcts = LanguageModelMCTS(lm, width, text_length, eval_function, c=25)
+    # mcts = LanguageModelMCTS(lm, width, text_length, eval_function, c=25)
+    mcts = LanguageModelMCTSWithPUCT(lm, width, text_length, eval_function, cpuct=25)
     state = start_state
 
     print("beginning search...")
